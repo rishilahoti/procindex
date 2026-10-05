@@ -1,15 +1,15 @@
 // Invariants of the phone assistant that would silently wreck the call if someone "tuned" them wrong.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { systemPrompt } from '../src/prompt.ts'
-import { TOOLS } from '../src/tools.ts'
-import { assistantConfig, PARTIAL_NUMBER } from '../src/vapi-config.ts'
+import { systemPrompt } from '../../src/receptionist/prompt.ts'
+import { TOOLS } from '../../src/receptionist/tools/index.ts'
+import { assistantConfig, PARTIAL_NUMBER } from '../../src/channels/voice/config.ts'
 
 const cfg = assistantConfig('https://example.ngrok.app/', 's3cret')
 
 test('latency settings stay inside the 1.2s budget', () => {
   assert.ok(cfg.startSpeakingPlan!.waitSeconds! <= 0.2, 'waitSeconds is a floor on every reply; the 0.4 default is a third of the budget')
-  assert.match((cfg.model as { model: string }).model, /haiku/, 'a small model: first token has to arrive in ~0.5s')
+  assert.match((cfg.model as { model: string }).model, /flash-lite/, 'a small model: first token has to arrive in ~0.5s')
   assert.ok((cfg.transcriber as { eotTimeoutMs: number }).eotTimeoutMs <= 3000)
   assert.equal(cfg.startSpeakingPlan!.smartEndpointingPlan, undefined, 'an endpointing plan would override the transcriber end-of-turn detection')
   assert.ok(cfg.voice && 'chunkPlan' in cfg.voice && cfg.voice.chunkPlan!.minCharacters! <= 15, 'short first chunk so the lead-in is spoken at once')
@@ -53,4 +53,11 @@ test('the voice prompt is rendered by Vapi at call time with the current shop-lo
   assert.match(content, /\{\{customer\.number\}\}/)
   assert.match(content, /endCall/)
   assert.doesNotMatch(systemPrompt('chat', 'x'), /customer\.number|endCall/, 'chat prompt has no voice-only instructions')
+})
+
+test('the phone assistant runs on Gemini (a Google AI Studio key in Vapi), with a token cap that reasoning cannot eat', () => {
+  const model = cfg.model as { provider: string; model: string; maxTokens: number }
+  assert.equal(model.provider, 'google')
+  assert.match(model.model, /^gemini-/)
+  assert.ok(model.maxTokens >= 512, 'Gemini counts hidden reasoning tokens against the cap; a tight one can leave nothing to speak')
 })

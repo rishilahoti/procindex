@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { DateTime } from 'luxon'
-import { fakePorts } from '../src/fake.ts'
-import { TZ } from '../src/shop.ts'
-import { normPhone, runTool, type NewAppt } from '../src/tools.ts'
+import { fakePorts } from '../../src/integrations/fake/ports.ts'
+import type { NewAppt } from '../../src/receptionist/ports.ts'
+import { normPhone } from '../../src/receptionist/tools/helpers.ts'
+import { runTool } from '../../src/receptionist/tools/index.ts'
+import { TZ } from '../../src/shop.ts'
 
 const T = DateTime.fromISO('2026-10-05T10:00', { zone: TZ }) // Monday; the demo week is built around this
 const ms = (iso: string) => DateTime.fromISO(iso, { zone: TZ }).toMillis()

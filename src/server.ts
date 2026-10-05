@@ -1,4 +1,4 @@
-// One small HTTP server: the chat UI (localhost only) and the Vapi tool webhook (shared-secret protected).
+// Entry point: one small HTTP server. Routes only: the chat UI (localhost only) and the Vapi tool webhook (shared-secret protected).
 import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import {
@@ -7,10 +7,12 @@ import {
 	type ServerResponse,
 } from 'node:http';
 import { pathToFileURL } from 'node:url';
-import { reply, type Session } from './agent.ts';
-import { fakePorts } from './fake.ts';
-import { google, googlePorts } from './google.ts';
-import { runTool, type Ports } from './tools.ts';
+import { reply, type Session } from './channels/chat/reply.ts';
+import { SECRET_HEADER, vapiTools } from './channels/voice/webhook.ts';
+import { fakePorts } from './integrations/fake/ports.ts';
+import { google } from './integrations/google/client.ts';
+import { googlePorts } from './integrations/google/ports.ts';
+import type { Ports } from './receptionist/ports.ts';
 
 const page = readFileSync(
 	new URL('../public/index.html', import.meta.url),
@@ -38,39 +40,6 @@ const same = (a: string | undefined, b: string | undefined) =>
 	a.length === b.length &&
 	timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
-/** Vapi "tool-calls" webhook. Always answers 200: a non-200 makes Vapi say "no result" instead of using our error text. */
-async function vapiTools(body: any, ports: Ports) {
-	const m = body?.message;
-	if (m?.type !== 'tool-calls') return {};
-	const ctx = {
-		callId: m.call?.id ?? 'vapi',
-		callerNumber: m.call?.customer?.number,
-	};
-	const results = await Promise.all(
-		(m.toolCallList ?? []).map(async (tc: any) => {
-			const fn = tc.function ?? tc; // Vapi sends {id, function: {name, arguments}} with arguments as a JSON string
-			try {
-				const args =
-					typeof fn.arguments === 'string'
-						? JSON.parse(fn.arguments || '{}')
-						: fn.arguments;
-				return {
-					name: fn.name,
-					toolCallId: tc.id,
-					result: await runTool(fn.name, args, ctx, ports),
-				};
-			} catch {
-				return {
-					name: fn.name,
-					toolCallId: tc.id,
-					error: 'could not read the tool arguments',
-				};
-			}
-		}),
-	);
-	return { results };
-}
-
 // ponytail: chat sessions live in memory and never expire; fine for dev and a demo, add a TTL before exposing it.
 export function createApp(ports: Ports) {
 	const sessions = new Map<string, Session>();
@@ -79,7 +48,7 @@ export function createApp(ports: Ports) {
 			if (req.method === 'POST' && req.url === '/vapi/tools') {
 				if (
 					!same(
-						req.headers['x-cedar-secret'] as string | undefined,
+						req.headers[SECRET_HEADER] as string | undefined,
 						process.env.VAPI_WEBHOOK_SECRET,
 					)
 				)
@@ -132,8 +101,8 @@ if (
 	if (process.env.FAKE)
 		console.warn('FAKE=1: in-memory calendar and sheet. Nothing is saved.');
 	else google(); // fail fast on missing GOOGLE_* settings
-	if (!process.env.ANTHROPIC_API_KEY)
-		console.warn('ANTHROPIC_API_KEY is not set: chat replies will fail.');
+	if (!process.env.GEMINI_API_KEY)
+		console.warn('GEMINI_API_KEY is not set: chat replies will fail.');
 	if (!process.env.VAPI_WEBHOOK_SECRET)
 		console.warn(
 			'VAPI_WEBHOOK_SECRET is not set: /vapi/tools will reject every call.',

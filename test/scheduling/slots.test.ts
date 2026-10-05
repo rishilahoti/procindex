@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { DateTime } from 'luxon'
-import { SERVICES, TZ } from '../src/shop.ts'
-import { alternatives, parseDay, parseTime, slotProblem, type Busy } from '../src/slots.ts'
+import { SERVICES, TZ } from '../../src/shop.ts'
+import { alternatives, parseDay, parseTime, slotProblem, type Busy } from '../../src/scheduling/slots.ts'
 
 const T = DateTime.fromISO('2026-10-05T10:00', { zone: TZ }) // a Monday
 const t = (iso: string) => DateTime.fromISO(iso, { zone: TZ })

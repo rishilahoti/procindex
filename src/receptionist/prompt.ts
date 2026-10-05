@@ -8,8 +8,8 @@ import {
 	SHOP,
 	TZ,
 	VEHICLES,
-} from './shop.ts';
-import { hoursLabel } from './slots.ts';
+} from '../shop.ts';
+import { hoursLabel } from '../scheduling/slots.ts';
 
 export const NOW_FMT = 'cccc, LLLL d, yyyy, h:mm a';
 // Vapi renders this Liquid at call time, so voice always gets the real current time in the shop's timezone.

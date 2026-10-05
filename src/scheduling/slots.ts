@@ -1,6 +1,6 @@
 // Pure scheduling logic: no I/O, no LLM. The model never decides whether a slot is free, this file does.
 import { DateTime, Settings } from 'luxon';
-import { HORIZON_DAYS, HOURS, LEAD_MIN, STEP_MIN, TZ } from './shop.ts';
+import { HORIZON_DAYS, HOURS, LEAD_MIN, STEP_MIN, TZ } from '../shop.ts';
 
 Settings.defaultLocale = 'en-US';
 

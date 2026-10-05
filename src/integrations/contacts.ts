@@ -1,6 +1,6 @@
 // The Contacts tab: one row per caller (keyed by phone), one appended line in Call Log per thing that came up.
 // Pure so the Google writer and the test fake share exactly the same row logic.
-import type { LogEntry } from './tools.ts';
+import type { LogEntry } from '../receptionist/ports.ts';
 
 export const STAMP = 'yyyy-LL-dd HH:mm';
 export const HEADERS = [

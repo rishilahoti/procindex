@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { once } from 'node:events'
 import type { AddressInfo } from 'node:net'
 import { after, test } from 'node:test'
-import { fakePorts } from '../src/fake.ts'
+import { fakePorts } from '../src/integrations/fake/ports.ts'
 
 process.env.VAPI_WEBHOOK_SECRET = 'test-secret'
 const { createApp } = await import('../src/server.ts')

@@ -1,12 +1,12 @@
-// Creates (or updates) the phone assistant on Vapi. The config itself lives in src/vapi-config.ts.
+// Creates (or updates) the phone assistant on Vapi. The config itself lives in src/channels/voice/config.ts.
 //   npm run vapi                     create the assistant, or update it if VAPI_ASSISTANT_ID is set
 //   npm run vapi -- latency <callId> per-turn latency report for a finished call
 import { VapiClient } from '@vapi-ai/server-sdk';
-import { assistantConfig } from '../src/vapi-config.ts';
+import { assistantConfig } from '../src/channels/voice/config.ts';
 
 const env = (k: string) => {
 	const v = process.env[k];
-	if (!v) throw new Error(`${k} is not set (see README)`);
+	if (!v) throw new Error(`${k} is not set (see docs/voice.md)`);
 	return v;
 };
 const vapi = new VapiClient({ token: env('VAPI_API_KEY') });

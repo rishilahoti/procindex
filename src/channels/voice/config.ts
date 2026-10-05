@@ -1,9 +1,10 @@
 // The Vapi phone assistant, with every latency knob set in code. Built here (not in the script) so tests can check it.
-// README has the reasoning behind each value. Type-only import: the server never loads the Vapi SDK.
+// docs/voice.md has the reasoning behind each value. Type-only import: the server never loads the Vapi SDK.
 import type { Vapi } from '@vapi-ai/server-sdk';
-import { systemPrompt, VAPI_NOW } from './prompt.ts';
-import { SHOP } from './shop.ts';
-import { TOOLS } from './tools.ts';
+import { systemPrompt, VAPI_NOW } from '../../receptionist/prompt.ts';
+import { TOOLS } from '../../receptionist/tools/index.ts';
+import { SHOP } from '../../shop.ts';
+import { SECRET_HEADER } from './webhook.ts';
 
 // Fires only when the caller stops on a half-finished digit string (1-9 digits at the end); a complete 10-digit number,
 // or anything else, gets the normal fast turn. A blanket wait after "what's your number?" would put the whole 1.2s
@@ -37,12 +38,15 @@ export function assistantConfig(
 			],
 		},
 
-		// 2. Thinking. Smallest fast model, low temperature for scheduling accuracy, short replies.
+		// 2. Thinking. Smallest fast Gemini model (Flash-Lite), low temperature for scheduling accuracy, short replies.
+		// Vapi calls Google with a key from its dashboard (Provider Keys -> Google): put your free AI Studio key there.
 		model: {
-			provider: 'anthropic',
-			model: 'claude-haiku-4-5-20251001',
+			provider: 'google',
+			model: 'gemini-3.1-flash-lite',
 			temperature: 0.3,
-			maxTokens: 300,
+			// Replies are two short sentences by prompt, so this is not what keeps them short. It is generous because on Gemini
+			// the cap also counts hidden reasoning tokens, and a tight one can leave nothing to speak.
+			maxTokens: 1024,
 			messages: [
 				{ role: 'system', content: systemPrompt('voice', VAPI_NOW) },
 			],
@@ -51,14 +55,10 @@ export function assistantConfig(
 					({
 						name,
 						description,
-						input_schema,
-					}): Vapi.AnthropicModelToolsItem => ({
+						parameters,
+					}): Vapi.GoogleModelToolsItem => ({
 						type: 'function',
-						function: {
-							name,
-							description,
-							parameters: input_schema,
-						},
+						function: { name, description, parameters },
 						// No request-start/complete messages: the model says its own lead-in ("Let me check.") as its first tokens, which
 						// is faster than waiting for the whole tool call to be generated. A request-complete message would also replace
 						// the model's answer. This only fills a genuinely slow tool call.
@@ -99,7 +99,7 @@ export function assistantConfig(
 		// Only tool calls come to us. src/server.ts checks the secret header. No retries: bookings must not be replayed.
 		server: {
 			url: `${publicUrl.replace(/\/$/, '')}/vapi/tools`,
-			headers: { 'x-cedar-secret': webhookSecret },
+			headers: { [SECRET_HEADER]: webhookSecret },
 			timeoutSeconds: 10,
 		},
 		serverMessages: ['tool-calls'],

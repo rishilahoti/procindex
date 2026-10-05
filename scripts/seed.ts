@@ -2,11 +2,12 @@
 //   1. makes sure the sheet has a "Contacts" tab with the header row
 //   2. replaces any earlier demo events on the calendar with a fresh week built around today
 // Run it again whenever the demo week has gone stale.
-import { HEADERS } from '../src/contacts.ts'
-import { demoAppts } from '../src/fake.ts'
-import { google, googlePorts } from '../src/google.ts'
+import { HEADERS } from '../src/integrations/contacts.ts'
+import { demoAppts } from '../src/integrations/fake/demo-week.ts'
+import { google } from '../src/integrations/google/client.ts'
+import { googlePorts } from '../src/integrations/google/ports.ts'
 import { TZ } from '../src/shop.ts'
-import { now } from '../src/slots.ts'
+import { now } from '../src/scheduling/slots.ts'
 
 const { cal, sh, calendarId, sheetId } = google()
 
