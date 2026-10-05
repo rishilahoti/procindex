@@ -1,0 +1,25 @@
+{
+  "name": "cedar-lane-receptionist",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx --env-file-if-exists=.env src/server.ts",
+    "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
+    "vapi": "tsx --env-file-if-exists=.env scripts/vapi.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@googleapis/calendar": "^20.1.0",
+    "@googleapis/sheets": "^18.1.0",
+    "luxon": "^3.7.2"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.7.6",
+    "@types/node": "^22.20.5",
+    "@vapi-ai/server-sdk": "^2.0.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
