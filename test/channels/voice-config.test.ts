@@ -21,11 +21,17 @@ test('partial-number rule waits only on a half-finished digit string', () => {
     ['4 1 5 5 5 5', true], ['Sara, 415 555', true], ['it is a 2019', true],
     ['4 1 5 5 5 5 0 1 9 0', false], ['my number is 415-555-0190.', false], ['4155550190', false], ['14155550190', false], ['Sara, 4 1 5 5 5 5 0 1 9 0', false],
     ['Sara', false], ['I would like Thursday', false], ['yes', false],
+    ['4 1 5 5 5 5 0 1 9', true], ['Sara, 415 555 019', true], ['', false], ['415 555 0190 ', false], ['1 415 555 0190', false], ['call 4', true],
   ]
   for (const [said, wait] of waits) assert.equal(re.test(said), wait, said)
   const rule = cfg.startSpeakingPlan!.customEndpointingRules![0] as { regex: string; timeoutSeconds: number }
   assert.equal(rule.regex, PARTIAL_NUMBER)
   assert.ok(rule.timeoutSeconds < 1, 'a longer wait than this makes the number turn blow the budget by itself')
+})
+
+test('the partial-number rule is RE2 syntax, because Vapi rejects anything else with a 400 (no lookahead, lookbehind or backreferences)', () => {
+  assert.doesNotMatch(PARTIAL_NUMBER, /\(\?(?:=|!|<=|<!|<[A-Za-z]|P)|\\[1-9k]/)
+  assert.doesNotMatch(PARTIAL_NUMBER, /[*+?}][+]/, 'possessive quantifiers are not RE2 either')
 })
 
 test('tools: same set as the chat agent, flat object schemas, and no message that would replace the model answer', () => {

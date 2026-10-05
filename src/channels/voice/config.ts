@@ -9,7 +9,10 @@ import { SECRET_HEADER } from './webhook.ts';
 // Fires only when the caller stops on a half-finished digit string (1-9 digits at the end); a complete 10-digit number,
 // or anything else, gets the normal fast turn. A blanket wait after "what's your number?" would put the whole 1.2s
 // budget on the name-and-number turn.
-export const PARTIAL_NUMBER = '^(?!.*(?:\\d[\\s\\-.,]*){10}$).*\\d[\\s\\-.,]*$';
+// Vapi only accepts RE2 syntax: no lookahead, lookbehind or backreferences, so "fewer than 10 digits" is spelled out
+// as "the trailing digit run, after the last letter or the start, is 1 to 9 digits (spaces, dashes, dots, commas allowed between)".
+export const PARTIAL_NUMBER =
+	'(?:^|[^\\d\\s\\-.,])[\\s\\-.,]*\\d(?:[\\s\\-.,]*\\d){0,8}[\\s\\-.,]*$';
 
 export function assistantConfig(
 	publicUrl: string,
